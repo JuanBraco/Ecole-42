@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: avast <avast@student.42.fr>                +#+  +:+       +#+         #
+#    By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/11/07 12:41:05 by avast             #+#    #+#              #
-#    Updated: 2023/03/03 12:51:16 by avast            ###   ########.fr        #
+#    Updated: 2023/03/08 16:53:22 by juanbraco        ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -56,13 +56,8 @@ SRC = ft_atoi.c \
 	ft_tolower.c \
 	ft_toupper.c \
 	get_next_line.c \
-	get_next_line_utils.c
-
-OBJ = $(SRC:.c=.o)
-
-BONUS = bonus
-
-SRC_BONUS = ft_lstnew.c \
+	get_next_line_utils.c \
+	ft_lstnew.c \
 	ft_lstadd_front.c \
 	ft_lstsize.c \
 	ft_lstlast.c \
@@ -71,6 +66,12 @@ SRC_BONUS = ft_lstnew.c \
 	ft_lstclear.c \
 	ft_lstiter.c \
 	ft_lstmap.c
+
+OBJ = $(SRC:.c=.o)
+
+BONUS = bonus
+
+SRC_BONUS = 
 
 OBJ_BONUS = $(SRC_BONUS:.c=.o)
 

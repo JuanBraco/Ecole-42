@@ -3,19 +3,83 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+        */
+/*   By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/03/01 09:49:16 by jde-la-f          #+#    #+#             */
-/*   Updated: 2023/03/06 12:30:20 by jde-la-f         ###   ########.fr       */
+/*   Updated: 2023/03/10 15:36:16 by juanbraco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "includes/minishell.h"
-#include <stdio.h>
-#include <readline/readline.h>
-#include <readline/history.h>
+
+int	g_status;
 
 void	prompt_loop(t_data *data);
+
+/* reset_mns
+1. Permet de comprendre comment recuperer les commandes et dans ce cas les imprime
+*/
+
+void ft_print_lst(t_list *cmd)
+{
+	char	**a;
+
+	while (cmd)
+	{
+		a = ((t_node *)cmd->content)->full_cmd;
+		printf("%s \n", a[0]);
+		cmd = cmd->next;
+	}
+}
+
+/* reset_mns
+1. Permet de reboucler et relancer un nouveau prompt une fois que l'utilisateur a fini de
+remplir sa ligne de commande
+*/
+
+static void	reset_mns(t_data *data)
+{
+	free(data->text);
+	prompt_loop(data);
+}
+
+/* parse_args
+1. subsplit est un tableau qui prend la i-eme ligne de args et recherche <|> dans cette ligne 
+et le separe
+2. puis ft_tab_replace_in rajoute la nouvelle ligne conteannt <|> dans le tableau initial
+3. redivise le tableau args s'il trouve un <|> puis incorpore dans le tableau original 	
+les nouvelles lignes avec un <|>. En resumé rajoute une ligne au tableau s'il trouve un 	
+<|>
+4. Rempli une liste chainée avec pour chaque noeud une structure qui contient un tableau
+avec la commande puis les "options", un tableau avec le PATH de la commande, le fd in et
+le fd out.
+*/
+
+static void	*parse_args(char **args, t_data *data)
+{
+	int	i;
+	char	**subsplit;
+
+	i = -1;
+	while (args && args[++i] && data)
+	{
+		subsplit = ft_cmdsubsplit(args[i], "<|>");
+		ft_tab_replace_in(&args, subsplit, i);
+		i += ft_tablen(subsplit) - 1;
+		ft_free_tab(&subsplit);
+	}
+	data->cmds = fill_nodes(args);
+	ft_print_lst(data->cmds);
+	if (!data->cmds)
+		return (data);
+	i = ft_lstsize(data->cmds);
+	if (args)
+	{
+		ft_lstclear(&data->cmds, free_content);
+		return (NULL);
+	}
+	return (data);
+}
 
 void find_pwd(t_data  *data, char **envp)
 {
@@ -29,200 +93,40 @@ void find_pwd(t_data  *data, char **envp)
 	}
 }
 
-void	reset_mns(t_data *data)
-{
-	//ft_simple_cmdsclear(&data->simple_cmds);
-	free(data->text);
-	/*if (data->pid)
-		free(data->pid);*/
-	//free_arr(data->paths);
-	//implement_data(data);
-	//data->reset = true;
-	prompt_loop(data);
-}
-
-void	free_tab(char **tab)
-{
-	int		i;
-
-	i = 0;
-	while (tab[i])
-	{
-		free(tab[i]);
-		i++;
-	}
-	free(tab);
-}
-
-char	**ft_tabdup(char **tab)
-{
-	char	**t_dup;
-	size_t	i;
-
-	i = 0;
-	while (tab[i] != NULL)
-		i++;
-	t_dup = ft_calloc(sizeof(char *), i + 1);
-	if (!t_dup)
-		return (NULL);
-	i = 0;
-	while (tab[i] != NULL)
-	{
-		t_dup[i] = ft_strdup(tab[i]);
-		if (t_dup[i] == NULL)
-		{
-			free_tab(t_dup);
-			return (t_dup);
-		}
-		i++;
-	}
-	return (t_dup);
-}
-
-void	sigint_handler(int sig)
-{
-	ioctl(0, TIOCSTI, "\n");
-	rl_replace_line("", 0);
-		rl_on_new_line();
-	(void) sig;
-}
-
-void	sigquit_handler(int sig)
-{
-	ft_putstr_fd("Quit: ", 2);
-	ft_putnbr_fd(sig, 2);
-	ft_putchar_fd('\n', 2);
-}
-
-/*void ft_text_trim(t_data *data)
-{
-	
-}*/
-
-void remove_double_spaces(char *str)
-{
-    int i = 0;
-	int j = 0;
-    int quote_count = 0, single_quote_count = 0;
-
-    while (str[i] != '\0') {
-        if (str[i] == '"' && (i == 0 || str[i - 1] != '\\')) {
-            quote_count++;
-        }
-        if (str[i] == '\'' && (i == 0 || str[i - 1] != '\\')) {
-            single_quote_count++;
-        }
-        if (str[i] == ' ' && str[i + 1] == ' ' && quote_count % 2 == 0 && single_quote_count % 2 == 0) {
-            continue;
-        }
-        str[j++] = str[i++];
-    }
-    str[j] = '\0';
-}
-
-static int	ft_count_words(const char *s, char *c, int counts[2])
-{
-	int		q[2];
-
-	q[0] = 0;
-	q[1] = 0;
-	while (s[counts[0]] != '\0')
-	{
-		if (!ft_strchr(c, s[counts[0]]))
-		{
-			counts[1]++;
-			while ((!ft_strchr(c, s[counts[0]]) || q[0]) && s[counts[0]] != '\0')
-			{
-				if (!q[1] && (s[counts[0]] == '\"' || s[counts[0]] == '\''))
-					q[1] = s[counts[0]];
-				q[0] = (q[0] + (s[counts[0]] == q[1])) % 2;
-				q[1] *= q[0] != 0;
-				counts[0]++;
-			}
-			if (q[0])
-				return (-1);
-		}
-		else
-			counts[0]++;
-	}
-	return (counts[1]);
-}
-
-static char	**ft_fill_array(char **aux, char const *s, char *set, int i[3])
-{
-	int		s_len;
-	int		q[2];
-
-	q[0] = 0;
-	q[1] = 0;
-	s_len = ft_strlen(s);
-	while (s[i[0]])
-	{
-		while (ft_strchr(set, s[i[0]]) && s[i[0]] != '\0')
-			i[0]++;
-		i[1] = i[0];
-		while ((!ft_strchr(set, s[i[0]]) || q[0] || q[1]) && s[i[0]])
-		{
-			q[0] = (q[0] + (!q[1] && s[i[0]] == '\'')) % 2;
-			q[1] = (q[1] + (!q[0] && s[i[0]] == '\"')) % 2;
-			i[0]++;
-		}
-		if (i[1] >= s_len)
-			aux[i[2]++] = "\0";
-		else
-			aux[i[2]++] = ft_substr(s, i[1], i[0] - i[1]);
-	}
-	return (aux);
-}
-
-char	**ft_cmdtrim(char const *s, char *set)
-{
-	char	**aux;
-	int		nwords;
-	int		i[3];
-	int		counts[2];
-
-	i[0] = 0;
-	i[1] = 0;
-	i[2] = 0;
-	counts[0] = 0;
-	counts[1] = 0;
-	if (!s)
-		return (NULL);
-	nwords = ft_count_words(s, set, counts);
-	if (nwords == -1)
-		return (NULL);
-	aux = malloc((nwords + 1) * sizeof(char *));
-	if (aux == NULL)
-		return (NULL);
-	aux = ft_fill_array(aux, s, set, i);
-	aux[nwords] = NULL;
-	return (aux);
-}
-
+/* prompt_loop - args est le tableau contenant sur chaque ligne chaque du text du prompt
+1. Lance le prompt "minishell$ " et stock ce qui sera ecrit dans la structure data (readline)
+2. Stock l'historique de ce qui a ete ecrit dans le prompt (add_history)
+3. Premier elagage du text en input, trie et stock chaque mot dans un tableau et separe 
+les mots s'il trouve un espace, tout ce qui se trouve entre "" ou '' est considere comme
+un mot a part entiere (ft_cmdtrim)
+4. Deuxieme elagage, cette fois ci on separe les <|>, puis on rempli la liste chainée des infos
+sur les commandes les pipes les redirections etc (parse_args)
+*/
 
 void	prompt_loop(t_data *data)
 {
-	char	*tmp;
-	char	**first_pars;
+	char	**args;
+	t_node	*node;
 
 	data->text = readline("minishell$ ");
 	add_history(data->text);
-	tmp = ft_strtrim(data->text, " ");
-	free(data->text);
-	data->text = tmp;
-	if (!data->text)
-	{
-		ft_putendl_fd("exit", STDOUT_FILENO);
-		exit(EXIT_SUCCESS);
-	}
-	remove_double_spaces(data->text);
-	first_pars = ft_cmdtrim(data->text, " ");
-	printf("%s \n", first_pars[0]);
-	/*if (data.text[0] == '\0')
-		return (reset_tools(data));*/
+	args = ft_cmdtrim(data->text, " ");
+	parse_args(args, data);
+	if (data && data->cmds)
+		node = data->cmds->content;
+	if (data && data->cmds)
+		ft_lstclear(&data->cmds, free_content);
+	//printf("%s", data->cmds->content);
 	reset_mns(data);
 }
+
+/* main
+1. Copie de l'environnement
+2. Gestion des signaux ctrl-C et ctrl-/
+3. Recuperer où on est dans l'arborescence
+4. Lancer l'affichage du prompt qui est dans une boucle infini et seul un signal
+peut nous faire quitter le minishell normalement
+*/
 
 int	main(int argc, char **argv, char **envp)
 {

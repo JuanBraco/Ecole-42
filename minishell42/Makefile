@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: avast <avast@student.42.fr>                +#+  +:+       +#+         #
+#    By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2023/01/10 11:41:55 by avast             #+#    #+#              #
-#    Updated: 2023/03/03 14:56:58 by avast            ###   ########.fr        #
+#    Updated: 2023/03/10 14:46:37 by juanbraco        ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,6 +20,14 @@ PIPES = src/pipes/errors.c \
 
 
 SRC = main.c \
+	error.c \
+	signal.c \
+	src/parsing/fill_nodes.c \
+	src/parsing/ft_cmdsubsplit.c \
+	src/parsing/init_pars.c \
+	src/parsing/ft_strtrim_all.c \
+	src/parsing/ft_tab.c \
+	src/parsing/utils.c \
 
 OBJ = $(SRC:.c=.o)
 

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+        */
+/*   By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/22 15:08:50 by aperez-b          #+#    #+#             */
-/*   Updated: 2023/03/01 16:00:46 by jde-la-f         ###   ########.fr       */
+/*   Updated: 2023/03/07 16:09:11 by juanbraco        ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -57,6 +57,12 @@ enum	e_mini_error
 	IS_DIR = 12,
 	NOT_DIR = 13
 };
+
+typedef struct s_list
+{
+	void			*content;
+	struct s_list	*next;
+}					t_list;
 
 /* Uses readline inside a child process and returns the read line */
 char	*mini_readline(t_prompt *prompt, char *str);
