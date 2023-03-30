@@ -1,26 +1,39 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_putstr_fd.c                                     :+:      :+:    :+:   */
+/*   ft_free_strtab.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/09 17:52:08 by avast             #+#    #+#             */
-/*   Updated: 2023/03/23 15:38:40 by avast            ###   ########.fr       */
+/*   Created: 2023/03/06 16:17:46 by avast             #+#    #+#             */
+/*   Updated: 2023/03/14 12:22:37 by avast            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_putstr_fd(char *s, int fd)
+void	ft_free_strtab(char **tab, int index)
 {
-	if (fd < 0 || fd > 4096 || s == 0)
-		return (0);
-	while (*s)
+	int	i;
+
+	if (!tab)
+		return ;
+	i = 0;
+	if (index < -1)
 	{
-		if (ft_putchar_fd(*s, fd) == -1)
-			return (-1);
-		s++;
+		while (tab[i])
+		{
+			free(tab[i]);
+			i++;
+		}
 	}
-	return (0);
+	else
+	{
+		while (index >= 0)
+		{
+			free(tab[index]);
+			index--;
+		}
+	}
+	free(tab);
 }

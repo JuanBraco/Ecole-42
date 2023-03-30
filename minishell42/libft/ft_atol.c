@@ -1,26 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_putstr_fd.c                                     :+:      :+:    :+:   */
+/*   ft_atol.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/09 17:52:08 by avast             #+#    #+#             */
-/*   Updated: 2023/03/23 15:38:40 by avast            ###   ########.fr       */
+/*   Created: 2023/03/22 12:56:09 by avast             #+#    #+#             */
+/*   Updated: 2023/03/27 15:36:41 by avast            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
-
-int	ft_putstr_fd(char *s, int fd)
+long int	ft_atol(const char *nptr)
 {
-	if (fd < 0 || fd > 4096 || s == 0)
-		return (0);
-	while (*s)
+	long int	i;
+	long int	sign;
+	long int	n;
+
+	i = 0;
+	sign = 1;
+	n = 0;
+	while ((nptr[i] >= 9 && nptr[i] <= 13) || nptr[i] == 32)
+		i++;
+	if (nptr[i] == '+' || nptr[i] == '-')
 	{
-		if (ft_putchar_fd(*s, fd) == -1)
-			return (-1);
-		s++;
+		if (nptr[i] == '-')
+			sign = -1;
+		i++;
+	}	
+	while (nptr[i] >= '0' && nptr[i] <= '9')
+	{
+		n = n * 10 + nptr[i] - 48;
+		i++;
 	}
-	return (0);
+	return (n * sign);
 }
