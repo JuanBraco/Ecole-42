@@ -3,28 +3,15 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+        */
+/*   By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/14 15:57:23 by jde-la-f          #+#    #+#             */
-/*   Updated: 2023/02/23 20:34:06 by juanbraco        ###   ########.fr       */
+/*   Updated: 2023/03/28 17:18:24 by jde-la-f         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/philo.h"
 #include <pthread.h>
-
-void	print(t_data *data, int id, char *string)
-{
-	pthread_mutex_lock(&(data->print));
-	if (!(data->philo_died))
-	{
-		printf("%lli ", actual_time() - data->start_time);
-		printf("%i ", id + 1);
-		printf("%s\n", string);
-	}
-	pthread_mutex_unlock(&(data->print));
-	return ;
-}
 
 int	init_input(t_data *data, char **argv)
 {
@@ -34,11 +21,18 @@ int	init_input(t_data *data, char **argv)
 		exit(1);
 	}
 	data->input.nb_philo = ft_atoi(argv[1]);
-	data->input.t_before_die = ft_atoi(argv[2]);
+	data->input.t_to_die = ft_atoi(argv[2]);
 	data->input.t_to_eat = ft_atoi(argv[3]);
 	data->input.t_to_sleep = ft_atoi(argv[4]);
-	if (data->input.nb_philo < 2 || data->input.t_before_die < 0 || data->input.t_to_eat < 0
-		|| data->input.t_to_sleep < 0 || data->input.nb_philo > 200)
+	if (data->input.nb_philo == 1)
+	{
+		printf("0 1 has taken a left fork\n");
+		printf("%i 1 died\n", data->input.t_to_die);
+		exit(1);
+	}
+	if (data->input.t_to_die < 0 || data->input.t_to_eat < 0
+		|| data->input.nb_philo < 1 || data->input.t_to_sleep < 0
+		|| data->input.nb_philo > 200)
 		return (1);
 	if (argv[5])
 		data->input.nb_meal_to_stop = ft_atoi(argv[5]);
@@ -51,63 +45,69 @@ int	init_philo(t_data *data)
 {
 	int	i;
 
-	data->start_time = actual_time();
 	i = data->input.nb_philo;
 	while (--i >= 0)
 	{
-		data->philos[i].id = i;
+		if (pthread_mutex_init(&(data->forks[i]), NULL))
+			return (1);
+	}
+	if (pthread_mutex_init(&data->print, NULL))
+		return (1);
+	if (pthread_mutex_init(&data->ph_eating, NULL))
+		return (1);
+	if (pthread_mutex_init(&data->ending, NULL))
+		return (1);
+	i = -1;
+	while (++i < data->input.nb_philo)
+	{
+		data->philos[i].id = i + 1;
 		data->philos[i].t_last_eat = 0;
-		data->philos[i].l_fork_id = i;
-		data->philos[i].r_fork_id = (i + 1) % data->input.nb_philo;
 		data->philos[i].data = data;
 		data->philos[i].meal_count = 0;
-		if (pthread_mutex_init(&data->forks[i], NULL))
-			return (1);
+		data->philos[i].lf_id = i;
+		data->philos[i].rf_id = (i + 1) % data->input.nb_philo;
 	}
 	return (0);
 }
 
 void	death_checker(t_data *data)
 {
-	int i;
+	int	i;
 
-	while (!(data->all_ate))
+	while (1)
 	{
 		i = -1;
-		while (++i < data->input.nb_philo && !(data->philo_died))
+		while (++i < data->input.nb_philo && !data->philo_died)
 		{
 			pthread_mutex_lock(&(data->ph_eating));
-			if (time_diff(data->philos[i].t_last_eat, actual_time()) > data->input.t_before_die)
+			if (actual_t() - data->philos[i].t_last_eat >= data->input.t_to_die)
 			{
-				print(data, i, " died");
+				print(data, i + 1, " died");
+				pthread_mutex_lock(&(data->ending));
 				data->philo_died = 1;
+				pthread_mutex_unlock(&(data->ending));
 			}
 			pthread_mutex_unlock(&(data->ph_eating));
-			usleep(100);
+			ft_usleep(5);
 		}
-		if (data->philo_died)
+		if (data->philo_died || data->all_ate)
 			break ;
-		i = 0;
-		while (data->input.nb_meal_to_stop != -1 && i < data->input.nb_philo && data->philos[i].meal_count >= data->input.nb_meal_to_stop)
-			i++;
-		if (i == data->input.nb_philo)
-			data->all_ate = 1;
+		ft_utils_death(data);
 	}
 }
-
 
 static int	start_simulation(t_data *data)
 {
 	int	i;
 
-	data->start_time = actual_time();
+	data->start_time = actual_t();
 	i = 0;
 	while (i < data->input.nb_philo)
 	{
-		//printf("%i", i);
-		if (pthread_create(&data->philos[i].thread, NULL, &philosopher, &(data->philos[i])))
+		data->philos[i].t_last_eat = actual_t();
+		if (pthread_create(&data->philos[i].thread, NULL, &philosopher,
+				&(data->philos[i])))
 			return (-1);
-		data->philos[i].t_last_eat = actual_time();
 		i++;
 	}
 	death_checker(data);
@@ -130,21 +130,21 @@ int	main(int argc, char **argv)
 
 	if (argc == 5 || argc == 6)
 	{
-		init_input(&data, argv);
-		if (pthread_mutex_init(&data.print, NULL))
+		if (init_input(&data, argv))
 			return (1);
-		if (pthread_mutex_init(&data.ph_eating, NULL))
-			return (1);
+		data.forks = malloc(data.input.nb_philo * sizeof(pthread_mutex_t));
+		if (!data.forks)
+			return (0);
 		data.philo_died = 0;
 		data.all_ate = 0;
-		init_philo(&data);
-		//printf("%i %i %i %i %i", data.input.nb_philo, data.input.t_before_die, data.input.t_to_eat, data.input.t_to_sleep, data.input.nb_meal_to_stop);
+		if (init_philo(&data))
+			return (1);
+		data.start_time = actual_t();
 		if (start_simulation(&data))
 			return (EXIT_FAILURE);
-		freeall(&data);
+		pthread_mutex_destroy(&data.ph_eating);
 	}
 	else
 		write(2, "Invalid number of arguments.\n", 28);
 	return (0);
 }
-

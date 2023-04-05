@@ -3,41 +3,32 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: juanbraco <juanbraco@student.42.fr>        +#+  +:+       +#+        */
+/*   By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/02/14 15:57:09 by jde-la-f          #+#    #+#             */
-/*   Updated: 2023/02/23 20:06:07 by juanbraco        ###   ########.fr       */
+/*   Updated: 2023/03/28 17:09:07 by jde-la-f         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/philo.h"
 
-long long		actual_time(void)
+long long	actual_t(void)
 {
-	struct timeval		t;
+	struct timeval	t;
 
 	if (gettimeofday(&t, NULL) == -1)
 		exit(1);
 	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
 
-void	ft_usleep(t_data *data, long int time)
+void	ft_usleep(long int time_in_ms)
 {
-	long long i;
+	long int	start_time;
 
-	i = actual_time();
-	while (!(data->philo_died))
-	{
-		if (time_diff(i, actual_time()) >= time)
-			break ;
-		usleep(50);
-	}
-}
-
-void	freeall(t_data *data)
-{
-	//free(data->philos);
-	pthread_mutex_destroy(&data->ph_eating);
+	start_time = 0;
+	start_time = actual_t();
+	while ((actual_t() - start_time) < time_in_ms)
+		usleep(time_in_ms / 10);
 }
 
 int	check_num(char **str)
@@ -60,14 +51,29 @@ int	check_num(char **str)
 	return (0);
 }
 
-long long	time_diff(long long past, long long pres)
-{
-	return (pres - past);
-}
-
 int	ft_isdigit(int character)
 {
 	if (character >= '0' && character <= '9')
 		return (1);
 	return (0);
+}
+
+void	ft_utils_death(t_data *data)
+{
+	int	i;
+
+	i = 0;
+	pthread_mutex_lock(&(data->ending));
+	pthread_mutex_lock(&(data->ph_eating));
+	while (data->input.nb_meal_to_stop != -1 && i < data->input.nb_philo
+		&& data->philos[i].meal_count >= data->input.nb_meal_to_stop)
+		i++;
+	pthread_mutex_unlock(&(data->ending));
+	pthread_mutex_unlock(&(data->ph_eating));
+	if (i == data->input.nb_philo)
+	{
+		pthread_mutex_lock(&(data->ending));
+		data->all_ate = 1;
+		pthread_mutex_unlock(&(data->ending));
+	}
 }
