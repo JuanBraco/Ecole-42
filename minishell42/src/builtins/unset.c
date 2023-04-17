@@ -1,26 +1,30 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_putstr_fd.c                                     :+:      :+:    :+:   */
+/*   unset.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/09 17:52:08 by avast             #+#    #+#             */
-/*   Updated: 2023/03/23 15:38:40 by avast            ###   ########.fr       */
+/*   Created: 2023/03/14 18:02:41 by avast             #+#    #+#             */
+/*   Updated: 2023/03/23 15:52:10 by avast            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include "../../includes/minishell.h"
+#include "../../libft/libft.h"
 
-int	ft_putstr_fd(char *s, int fd)
+/* Parsing : verifier quand le type d'argument est mauvais */
+/* S'il y a un pipe ou plus, ne fait rien */
+int	builtin_unset(t_cmds *cmd, t_pipex *pipex)
 {
-	if (fd < 0 || fd > 4096 || s == 0)
-		return (0);
-	while (*s)
+	int		i;
+
+	i = 1;
+	while (cmd->tab[i])
 	{
-		if (ft_putchar_fd(*s, fd) == -1)
-			return (-1);
-		s++;
+		env_delete_var(pipex->env, cmd->tab[i]);
+		i++;
 	}
+	update_env_char(pipex->env, pipex->envp);
 	return (0);
 }

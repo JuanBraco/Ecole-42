@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   get_next_line.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
+/*   By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/12 12:19:11 by avast             #+#    #+#             */
-/*   Updated: 2023/01/25 11:56:40 by avast            ###   ########.fr       */
+/*   Updated: 2023/03/23 19:17:14 by jde-la-f         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ char	*fill_buffer(int fd, char *buff)
 		return (0);
 	tmp[BUFFER_SIZE] = '\0';
 	a = BUFFER_SIZE;
-	while (a == BUFFER_SIZE && !ft_strchr_gnl(buff, '\n'))
+	while (a > 0 && !ft_strchr_gnl(buff, '\n'))
 	{
 		a = read(fd, tmp, BUFFER_SIZE);
 		if (a == -1)

@@ -6,11 +6,11 @@
 /*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/30 22:59:09 by avast             #+#    #+#             */
-/*   Updated: 2023/02/28 17:21:19 by avast            ###   ########.fr       */
+/*   Updated: 2023/03/23 11:54:37 by avast            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../../includes/pipes.h"
+#include "../../includes/minishell.h"
 #include "../../libft/libft.h"
 
 char	*ft_strjoin_cmd(char const *s1, char const *s2)
@@ -41,52 +41,31 @@ char	*ft_strjoin_cmd(char const *s1, char const *s2)
 	return (str);
 }
 
-int	check_path(void)
+/* Obtenir le path d'une commande  */
+char	*get_command_path(char *cmd, t_env **environ)
 {
-	int	i;
-
-	i = 0;
-	while (environ[i])
-	{
-		if (ft_strstr("PATH=", environ[i]))
-			return (i);
-		else
-			i++;
-	}
-	return (-1);
-}
-
-char	*get_command_path(char *cmd)
-{
-	char	**path;
+	t_env	*paths;
+	char	**sub_path;
 	char	*cmd_path;
 	int		i;
 
-	i = check_path();
-	if (!cmd)
-		return (NULL);
-	if (i < 0 || cmd[0] == '/' || cmd[0] == '.' || cmd[0] == '~')
+	paths = find_var(environ, "PATH");
+	if (!paths || !(paths->value)
+		|| cmd[0] == '/' || cmd[0] == '.' || cmd[0] == '~')
 		return (ft_strdup(cmd));
-	path = ft_split((environ[i] + 5), ':');
+	if (!cmd[0])
+		return (NULL);
+	sub_path = ft_split(paths->value, ':');
 	i = 0;
-	cmd_path = ft_strjoin_cmd(path[i], cmd);
-	while (path[i] && access(cmd_path, X_OK) == -1)
+	cmd_path = ft_strjoin_cmd(sub_path[i], cmd);
+	while (sub_path[i] && access(cmd_path, X_OK) == -1)
 	{
 		i++;
 		free(cmd_path);
-		cmd_path = ft_strjoin_cmd(path[i], cmd);
+		cmd_path = ft_strjoin_cmd(sub_path[i], cmd);
 	}
-	if (access(cmd_path, X_OK) == 0)
-		return (free_tab(path, -1), cmd_path);
-	else if (access(cmd_path, F_OK) == 0)
-		return (free_tab(path, -1), cmd_path);
+	if (access(cmd_path, X_OK) == 0 || access(cmd_path, F_OK) == 0)
+		return (ft_free_strtab(sub_path, -2), cmd_path);
 	else
-		return (free_tab(path, -1), free(cmd_path), NULL);
-}
-
-void	free_path(char *path, char **arg)
-{
-	if (path)
-		free(path);
-	free_tab(arg, -1);
+		return (ft_free_strtab(sub_path, -2), free(cmd_path), NULL);
 }

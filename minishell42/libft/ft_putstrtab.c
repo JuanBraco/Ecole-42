@@ -1,26 +1,27 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_putstr_fd.c                                     :+:      :+:    :+:   */
+/*   ft_putstrtab.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: avast <avast@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/11/09 17:52:08 by avast             #+#    #+#             */
-/*   Updated: 2023/03/23 15:38:40 by avast            ###   ########.fr       */
+/*   Created: 2023/03/14 12:26:36 by avast             #+#    #+#             */
+/*   Updated: 2023/03/14 12:30:52 by avast            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "libft.h"
 
-int	ft_putstr_fd(char *s, int fd)
+void	ft_putstrtab(char **tab)
 {
-	if (fd < 0 || fd > 4096 || s == 0)
-		return (0);
-	while (*s)
+	int	i;
+
+	if (!tab)
+		return ;
+	i = 0;
+	while (tab[i])
 	{
-		if (ft_putchar_fd(*s, fd) == -1)
-			return (-1);
-		s++;
+		ft_printf("%s\n", tab[i]);
+		i++;
 	}
-	return (0);
 }
