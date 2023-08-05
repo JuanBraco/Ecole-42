@@ -1,0 +1,35 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: jde-la-f <jde-la-f@student.42.fr>          +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/02/06 11:05:24 by jde-la-f          #+#    #+#              #
+#    Updated: 2023/04/25 18:45:47 by jde-la-f         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
+NAME = phonebook
+
+CC = clang++ -std=c++98
+CFLAGS = -Wall -Wextra -Werror
+
+FILES = main.cpp PhoneBook.cpp Contact.cpp
+OBJ = $(FILES:.cpp=.o)
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $< -o $@
+
+all: $(OBJ)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+
+clean:
+	rm -rf $(OBJ)
+
+fclean: clean
+	rm -rf $(NAME)
+
+re: fclean all
+
+.PHONY : all clean fclean re
